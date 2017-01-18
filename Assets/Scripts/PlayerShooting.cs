@@ -7,8 +7,12 @@ public class PlayerShooting : NetworkBehaviour {
 	[SerializeField] Transform firePosition;
 	[SerializeField] ShotEffectsManager shotEffects;
 
+	[SyncVar] int score;
+
 	float ellapsedTime;
 	bool canShoot;
+
+
 	void Start()
 	{
 		shotEffects.Initialize();
@@ -42,7 +46,10 @@ public class PlayerShooting : NetworkBehaviour {
 
 		if(result)
 		{
-			// 체력관련 처리
+			PlayerHealth enemy = hit.transform.GetComponent<PlayerHealth>();
+
+			if(enemy != null)
+				enemy.TakeDamage();
 		}
 
 		RpcProcessShotEffects(result,hit.point);
