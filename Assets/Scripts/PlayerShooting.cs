@@ -7,7 +7,7 @@ public class PlayerShooting : NetworkBehaviour {
 	[SerializeField] Transform firePosition;
 	[SerializeField] ShotEffectsManager shotEffects;
 
-	[SyncVar] int score;
+	[SyncVar (hook = "OnScoreChanged")] int score;
 
 	float ellapsedTime;
 	bool canShoot;
@@ -18,6 +18,12 @@ public class PlayerShooting : NetworkBehaviour {
 		shotEffects.Initialize();
 		if(isLocalPlayer)
 			canShoot = true;
+	}
+
+	[ServerCallback]
+	void OnEnable()
+	{
+		score = 0;
 	}
 
 	void Update()
@@ -49,7 +55,12 @@ public class PlayerShooting : NetworkBehaviour {
 			PlayerHealth enemy = hit.transform.GetComponent<PlayerHealth>();
 
 			if(enemy != null)
-				enemy.TakeDamage();
+			{
+				bool wasKilled = enemy.TakeDamage();
+				
+				if(wasKilled)
+					score++;
+			}
 		}
 
 		RpcProcessShotEffects(result,hit.point);
@@ -62,6 +73,13 @@ public class PlayerShooting : NetworkBehaviour {
 		
 		if(playImpact)
 			shotEffects.PlayImpactEffect(point);
+	}
+
+	void OnScoreChanged(int value)
+	{
+		score = value;
+		if(isLocalPlayer)
+			PlayerCanvas.canvas.SetKills(value);
 	}
 
 }

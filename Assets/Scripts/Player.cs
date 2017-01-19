@@ -11,9 +11,12 @@ public class Player : NetworkBehaviour {
 	[SerializeField] ToggleEvent onToggleRemote;
 	[SerializeField] float respawnTime = 5f;
 
+	NetworkAnimator anim;
+
 	GameObject mainCamera;
 	void Start()
 	{
+		anim = GetComponent<NetworkAnimator>();
 		mainCamera = Camera.main.gameObject;
 		EnablePlayer();
 	}
@@ -54,6 +57,8 @@ public class Player : NetworkBehaviour {
 		{
 			PlayerCanvas.canvas.WriteGameStatusText("You Died!");
 			PlayerCanvas.canvas.PlayDeathAudio();
+
+			anim.SetTrigger("Died");
 		}
 
 		DisablePlayer();
@@ -68,9 +73,20 @@ public class Player : NetworkBehaviour {
 			Transform spawn = NetworkManager.singleton.GetStartPosition();
 			transform.position = spawn.position;
 			transform.rotation = spawn.rotation;
+
+			anim.SetTrigger("Restart");
 		}
 
 		EnablePlayer();
+	}
+
+	void Update()
+	{
+		if(!isLocalPlayer)
+			return;
+
+		anim.animator.SetFloat("Speed",Input.GetAxis("Vertical"));
+		anim.animator.SetFloat("Strafe",Input.GetAxis("Horizontal"));
 	}
 
 }
